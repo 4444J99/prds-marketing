@@ -1,0 +1,98 @@
+---
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PRDS - UCC Intelligence for MCA Brokers. Turn public UCC filings into qualified leads." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+  </head>
+  <body class="font-['Inter'] antialiased">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center">
+            <a href="/" class="flex items-center space-x-2" aria-label="PRDS Home">
+              <svg class="w-8 h-8 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span class="text-xl font-bold text-gray-900">PRDS</span>
+            </a>
+          </div>
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="/features" class="text-gray-600 hover:text-gray-900 transition-colors">Features</a>
+            <a href="/docs" class="text-gray-600 hover:text-gray-900 transition-colors">Documentation</a>
+            <a href="/pricing" class="text-gray-600 hover:text-gray-900 transition-colors">Pricing</a>
+            <a href="/blog" class="text-gray-600 hover:text-gray-900 transition-colors">Blog</a>
+          </div>
+          <div class="flex items-center space-x-4">
+            <a href="/docs" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Docs</a>
+            <a href="/login" class="text-gray-600 hover:text-gray-900 text-sm font-medium">Login</a>
+            <a href="/signup" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+              Start Free
+            </a>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <footer class="bg-gray-900 text-gray-300 py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8">
+          <div>
+            <a href="/" class="flex items-center space-x-2 mb-4">
+              <svg class="w-8 h-8 text-yellow-300" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+              <span class="text-xl font-bold text-white">PRDS</span>
+            </a>
+            <p class="text-sm text-gray-400">UCC Intelligence for MCA Brokers</p>
+          </div>
+          <div>
+            <h4 class="font-semibold text-white mb-4">Product</h4>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/features" class="hover:text-white transition-colors">Features</a></li>
+              <li><a href="/pricing" class="hover:text-white transition-colors">Pricing</a></li>
+              <li><a href="/docs" class="hover:text-white transition-colors">Documentation</a></li>
+              <li><a href="/api" class="hover:text-white transition-colors">API Reference</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-white mb-4">Company</h4>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/about" class="hover:text-white transition-colors">About</a></li>
+              <li><a href="/blog" class="hover:text-white transition-colors">Blog</a></li>
+              <li><a href="/careers" class="hover:text-white transition-colors">Careers</a></li>
+              <li><a href="/contact" class="hover:text-white transition-colors">Contact</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-white mb-4">Legal</h4>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/privacy" class="hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms" class="hover:text-white transition-colors">Terms of Service</a></li>
+              <li><a href="/compliance" class="hover:text-white transition-colors">Compliance</a></li>
+              <li><a href="/security" class="hover:text-white transition-colors">Security</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
+          <p>&copy; 2026 PRDS. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
