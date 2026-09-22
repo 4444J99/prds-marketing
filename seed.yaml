@@ -1,0 +1,69 @@
+schema_version: '1.0'
+organ: III
+organ_name: Commerce
+repo: prds-marketing
+org: 4444J99
+
+metadata:
+  implementation_status: PLANNED
+  tier: flagship
+  promotion_status: PUBLIC_PROCESS
+  last_validated: '2026-09-21'
+  generated: '2026-09-21'
+  wave: 4
+
+boundary:
+  visibility: PUBLIC
+  ip_classification: MARKETING
+  data_classification: PUBLIC
+  credential_authority: NONE
+
+packages:
+  - name: "@prds/types"
+    visibility: PUBLIC
+    distribution: GIT_DEP
+    description: "Feature flags, collector metadata for SEO"
+  - name: "@prds/entitlements"
+    visibility: PUBLIC
+    distribution: GIT_DEP
+    description: "Tier definitions for pricing pages"
+
+content_sources:
+  - type: static
+    path: apps/site/src/pages
+  - type: mdx
+    path: apps/site/src/content/blog
+  - type: openapi
+    source: prds-core
+
+seo:
+  programmatic_pages:
+    - template: features
+      data: "@prds/types collector metadata"
+    - template: pricing
+      data: "@prds/entitlements tiers"
+    - template: docs
+      data: OpenAPI spec from prds-core
+
+signup_flow:
+  method: stripe_checkout_redirect
+  no_custom_forms: true
+  success_redirect: prds-core dashboard
+
+public_build_audit:
+  - no_private_engine_logic
+  - no_secrets_in_source_maps
+  - no_customer_data_in_ci_logs
+  - clean_build_without_private_credentials: true
+
+deployment:
+  staging:
+    target: cloudflare_pages
+    auto_on_push: true
+    preview: true
+  production:
+    target: cloudflare_pages
+    auto_on_push: true
+
+lane: evolve-platform
+owner: marketing-team
