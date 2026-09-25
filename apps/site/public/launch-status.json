@@ -1,0 +1,15 @@
+{
+  "schema": "prds.publication.v1",
+  "reviewedOn": "2026-09-24",
+  "status": "review-candidate",
+  "canonicalOrigin": null,
+  "publicReleaseAccepted": false,
+  "operationalCoverage": [],
+  "intake": { "status": "not-connected" },
+  "checkout": { "status": "not-connected" },
+  "offerStatus": "proposed-experiment-not-purchasable",
+  "offerReference": "September 24, 2026 owner-approved launch experiment; payment and entitlements remain owned by prds-commerce",
+  "pilotUSD": 300,
+  "pilotDays": 14,
+  "continuationUSDPerMonth": 500
+}

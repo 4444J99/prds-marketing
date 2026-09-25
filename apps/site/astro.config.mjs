@@ -1,10 +1,4 @@
-import { defineConfig } from 'astro/config'
-import cloudflare from '@astrojs/cloudflare'
-import react from '@astrojs/react'
-
-export default defineConfig({
-  output: 'static',
-  adapter: cloudflare(),
-  integrations: [react()],
-  site: 'https://prds.dev'
-})
+import { defineConfig } from 'astro/config';
+import { canonicalOrigin } from './site.mjs';
+// Static-only pages need neither private engine packages nor a server adapter.
+export default defineConfig({ output: 'static', trailingSlash: 'always', site: canonicalOrigin() || undefined });

@@ -1,62 +1,37 @@
 # PRDS Marketing
 
-**Public acquisition system** — Approved public pages, pricing explanations, documentation, signup, proof of work.
+Public acquisition implementation for a bounded broker-intelligence evaluation. No private engine imports, customer exports, secrets, product API or payment backend live in this repository.
 
-## Boundary
+## Implemented
 
-- **Visibility**: Public
-- **Consumes sanitized publication contracts only** — no private engine imports, customer exports, or private planning history
-- Public build must succeed without private credentials
-- Static-first (Astro 5 on Cloudflare Pages)
-- Programmatic SEO from `@prds/types` metadata (not engine implementation)
+Twelve static routes cover the offer, illustrative review method, bounded pilot pricing, coverage, methods, request preparation, data handling, and two Field Notes. A browser-local CSV diagnostic checks repeated full rows, missingness, whitespace and optional strict-ISO date bins. It does not identify businesses, verify contactability, or upload the list.
 
-## Architecture
+The request contract supports bounded fields, reply-only consent, idempotency and correlated durable receipts. Default intake is **not connected**: the UI prepares an explicitly unsent local draft. Proposed $300/two-week and $500/month capped continuation prices are not active checkout or entitlements. Publication defaults remain noindex, no accepted live coverage, no intake, no checkout, and no invented canonical domain.
 
-```
-prds-marketing/
-├── apps/site/                # Astro 5 on Cloudflare Pages
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── index.astro           # Hero: "UCC Intelligence for MCA Brokers"
-│   │   │   ├── features.astro        # Collector demo, scoring, compliance
-│   │   │   ├── pricing.astro         # Tier comparison (reads @prds/entitlements)
-│   │   │   ├── docs/                 # API docs, collector guides
-│   │   │   ├── blog/                 # SEO content
-│   │   │   └── signup.astro          # Stripe Checkout redirect
-│   │   ├── components/
-│   │   ├── content/                  # MDX collections
-│   │   └── layouts/
-│   ├── astro.config.mjs              # output: 'static', adapter: cloudflare
-│   └── package.json
-├── wrangler.toml
-└── seed.yaml
+## Build and verify
+
+Use Node 24.19.0 (`.nvmrc`) and npm 11.9.0, matching the inherited supported runtime. The app retains the existing Astro 7.3.3 version. Its real generated dependency lock is committed; installation must not silently resolve a different graph.
+
+```sh
+npm install --global npm@11.9.0
+cd apps/site
+npm ci --no-audit --no-fund
+npm test
+npm run build
 ```
 
-## Content Strategy
+CI uses immutable action revisions, read-only repository permissions, bash pipefail, the committed lock, actual Astro builds, emitted-route checks, and Chromium desktop/mobile behavior checks. It does not deploy, change branches, read customer data, or launch a coding agent.
 
-| Page Type | Template | Data Source |
-|-----------|----------|-------------|
-| Home | `index.astro` | Static + `@prds/types` feature flags |
-| Features | `features.astro` | `@prds/types` collector metadata |
-| Pricing | `pricing.astro` | `@prds/entitlements` tier definitions |
-| Docs | `docs/[...slug].astro` | Markdown + OpenAPI spec |
-| Blog | `blog/[...slug].astro` | MDX content collections |
-| Signup | `signup.astro` | Stripe Checkout redirect (no custom forms) |
+`npm run preview:offline` renders the same shared page renderer without Astro dependencies. This is useful in a constrained environment but is **not** an Astro build or a production-deployment receipt.
 
-## Public Build Audit
+## Verification evidence
 
-- No private engine logic in bundles
-- No secrets in source maps
-- No customer data in CI logs
-- Clean build succeeds without private credentials
+Run **36086362472**, head **2d9fa1ac5628a393bde41f1aa6bfaf6cbc55fab4**, passed 71 Node tests, the actual 12-page Astro build/link verifier, and **159 Chromium assertions** across 390/768/1440 widths plus local-file privacy and unsent-request behavior. Its artifacts and history are recorded in [verification evidence](docs/VERIFICATION.md). Later lock/CI-hardening revisions must pass their own PR check; old evidence is not automatically inherited by a new head.
 
-## Deployment
+## Activation and ownership
 
-- **Staging**: Auto on push to `main` (Cloudflare Pages preview)
-- **Production**: Auto on push to `main` (Cloudflare Pages production)
+Read [activation contract](docs/ACTIVATION.md) and [commercial operating kit](docs/COMMERCIAL-OPERATING-KIT.md). Existing ops owns hosting/API integration; commerce owns offers, payments and entitlements. The public publication manifest is not a second billing catalogue.
 
-## Governance
+A local draft is not a received lead. A successful test is not deployment acceptance. A source adapter is not purchasable coverage. No customer payment or renewal is claimed.
 
-- Lane: `evolve-platform` (audience system, public site)
-- Owner: Marketing team
-- Seed: `seed.yaml` registered with ORGANVM/Limen
+Coordination: issue #2 and PR #3; inherited audience #469/#470/#481; commercial #468; delivery #473. Preserve other agents' claims and all inherited acceptance obligations.

@@ -1,0 +1,10 @@
+---
+import { pages, renderDocument } from '../../site.mjs';
+export function getStaticPaths() {
+  return pages.filter(page => page.path !== '/').map(page => ({
+    params: { slug: page.path.replace(/^\/|\/$/g, '') }, props: { page }
+  }));
+}
+const { page } = Astro.props;
+---
+<Fragment set:html={renderDocument(page)} />
