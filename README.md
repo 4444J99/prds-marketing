@@ -1,36 +1,37 @@
 # PRDS Marketing
 
-Public acquisition implementation for a bounded broker-intelligence evaluation. This repository contains no private engine imports, no customer exports, no secrets, and no product API or payment backend.
+Public acquisition implementation for a bounded broker-intelligence evaluation. No private engine imports, customer exports, secrets, product API or payment backend live in this repository.
 
-## What is implemented
+## Implemented
 
-- Twelve static routes: overview, browser-local list check, illustrative sample, pilot pricing, evaluation request, coverage, methods, Field Notes index and two notes, data handling, evaluation boundaries.
-- A 2 MiB / 10,000-row CSV diagnostic with quoted-field parsing, exact trimmed-row duplicate detection, missingness, whitespace and optional strict-ISO date bins. No business-identity or contactability claims.
-- Validated inquiry transport contract, idempotency/correlated-receipt semantics, no automatic retries or fabricated successful submissions. Default intake is not connected: the UI prepares an explicitly unsent local draft.
-- Proposed $300 two-week pilot and $500/month capped continuation, not active checkout/entitlements.
-- Review-candidate publication manifest; no live-state claims, no invented domain, and noindex in HTML, robots and hosting headers.
+Twelve static routes cover the offer, illustrative review method, bounded pilot pricing, coverage, methods, request preparation, data handling, and two Field Notes. A browser-local CSV diagnostic checks repeated full rows, missingness, whitespace and optional strict-ISO date bins. It does not identify businesses, verify contactability, or upload the list.
+
+The request contract supports bounded fields, reply-only consent, idempotency and correlated durable receipts. Default intake is **not connected**: the UI prepares an explicitly unsent local draft. Proposed $300/two-week and $500/month capped continuation prices are not active checkout or entitlements. Publication defaults remain noindex, no accepted live coverage, no intake, no checkout, and no invented canonical domain.
 
 ## Build and verify
 
-The public app remains Astro static output. Server adapters, React and private `@prds` package dependencies are not required for these routes. Current source uses the repository's existing Astro 7.3.3, pinned rather than speculatively upgraded.
+Use Node 24.19.0 (`.nvmrc`) and npm 11.9.0, matching the inherited supported runtime. The app retains the existing Astro 7.3.3 version. Its real generated dependency lock is committed; installation must not silently resolve a different graph.
 
-```
+```sh
+npm install --global npm@11.9.0
 cd apps/site
-npm install   # bootstrap only until the generated, verified lock is committed
+npm ci --no-audit --no-fund
 npm test
 npm run build
 ```
 
-CI uses Node 24.19.0 per the inherited branch constitution, captures the exact dependency lock, builds Astro, checks emitted routes and runs Python Playwright against the output. No deployment, credentials, code-writing agent, or paid account operation is embedded in CI.
+CI uses immutable action revisions, read-only repository permissions, bash pipefail, the committed lock, actual Astro builds, emitted-route checks, and Chromium desktop/mobile behavior checks. It does not deploy, change branches, read customer data, or launch a coding agent.
 
-`npm run preview:offline` renders the exact shared page renderer without Astro dependencies for constrained local inspection. It is NOT an Astro build or a production-deployment receipt. Source-only unit/contract tests can run offline with Node >=22.12.
+`npm run preview:offline` renders the same shared page renderer without Astro dependencies. This is useful in a constrained environment but is **not** an Astro build or a production-deployment receipt.
 
-Local first-pass verification: 71 Node tests and 12 shared-renderer route/link checks passed on Node 22.16.0. Container network/package installation and browser navigation were unavailable; remote Astro/browser results must be obtained before release. Re-run against the final commit and record evidence rather than preserving this paragraph as a permanent claim.
+## Verification evidence
 
-## Activation boundaries
+Run **36086362472**, head **2d9fa1ac5628a393bde41f1aa6bfaf6cbc55fab4**, passed 71 Node tests, the actual 12-page Astro build/link verifier, and **159 Chromium assertions** across 390/768/1440 widths plus local-file privacy and unsent-request behavior. Its artifacts and history are recorded in [verification evidence](docs/VERIFICATION.md). Later lock/CI-hardening revisions must pass their own PR check; old evidence is not automatically inherited by a new head.
 
-Read [activation contract](docs/ACTIVATION.md) and [commercial operating kit](docs/COMMERCIAL-OPERATING-KIT.md). The existing ops lane owns hosting/API integration; commerce owns offers, payments and entitlements. `public/launch-status.json` is a sanitized publication boundary, not a second billing catalogue.
+## Activation and ownership
 
-The source is a review candidate. A working local draft is not a received lead. A successful test is not production acceptance. A source adapter is not purchasable coverage. No customer payment or renewal is claimed.
+Read [activation contract](docs/ACTIVATION.md) and [commercial operating kit](docs/COMMERCIAL-OPERATING-KIT.md). Existing ops owns hosting/API integration; commerce owns offers, payments and entitlements. The public publication manifest is not a second billing catalogue.
 
-Coordination: issue #2; inherited audience #469/#470/#481; commercial #468; delivery #473. One isolated marketing branch/PR; preserve other agents' claims and all inherited acceptance obligations.
+A local draft is not a received lead. A successful test is not deployment acceptance. A source adapter is not purchasable coverage. No customer payment or renewal is claimed.
+
+Coordination: issue #2 and PR #3; inherited audience #469/#470/#481; commercial #468; delivery #473. Preserve other agents' claims and all inherited acceptance obligations.

@@ -49,3 +49,21 @@ test('review headers prohibit network and indexing', () => {
   assert.match(readFileSync(new URL('../public/_headers', import.meta.url), 'utf8'), /connect-src 'none'/);
   assert.match(readFileSync(new URL('../public/robots.txt', import.meta.url), 'utf8'), /Disallow: \//);
 });
+
+test('generated lock matches the public manifest and contains registry integrity', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  const lock = JSON.parse(readFileSync(new URL('../package-lock.json', import.meta.url), 'utf8'));
+  assert.equal(lock.lockfileVersion, 3); assert.equal(lock.name, manifest.name); assert.equal(lock.version, manifest.version);
+  assert.deepEqual(lock.packages[''].dependencies, manifest.dependencies);
+  assert.equal(lock.packages['node_modules/astro'].version, manifest.dependencies.astro);
+  for (const [path, entry] of Object.entries(lock.packages)) {
+    if (!path) continue;
+    assert.ok(entry.resolved?.startsWith('https://registry.npmjs.org/'), `Unapproved registry for ${path}`);
+    assert.match(entry.integrity, /^sha512-/);
+  }
+});
+test('CI is read-only, lock-enforcing, and cannot hide piped test failures', () => {
+  const workflow = readFileSync(new URL('../../../.github/workflows/launch-verification.yml', import.meta.url), 'utf8');
+  assert.match(workflow, /shell: bash/); assert.match(workflow, /npm ci --no-audit --no-fund/);
+  assert.doesNotMatch(workflow, /contents: write|preserve_verified_lock|else npm install/);
+});

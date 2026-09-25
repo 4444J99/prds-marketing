@@ -36,7 +36,7 @@ cd apps/site && npm ci && npm run build
 output: apps/site/dist
 ```
 
-The initial CI bootstraps a real package lock when absent and retains it in an artifact. Before release, commit the generated lock from a successful exact-head install and require `npm ci` only. No hand-invented lock/integrity values. The framework version is retained from the accepted repository, not upgraded speculatively.
+The real generated dependency lock from run 36085883800 is committed byte-for-byte and CI requires `npm ci` with Node 24.19.0/npm 11.9.0. The artifact and lock digests are recorded in VERIFICATION.md. No hand-invented integrity values or install fallback are used. The framework version is retained from the accepted repository, not upgraded speculatively.
 
 Use the existing permitted Pages account/project and record project identity, deployment ID, exact commit, canonical HTTPS origin, response headers, preview protection/indexing behavior, route results, and applicable included-resource allowance. Do not enroll or upgrade an account, provision paid resources, or reuse unrelated credentials. Do not promote runtime ingestion as part of static-site deployment.
 
