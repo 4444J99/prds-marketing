@@ -1,5 +1,7 @@
 /** Shared public request contract. Transport is supplied by the existing product owner. */
 export const REQUEST_SCHEMA = 'prds.broker-fit-request.v1';
+export const PENDING_SCHEMA = 'prds.pending-inquiry.v1';
+const REQUEST_ID = /^[a-zA-Z0-9-]{16,80}$/;
 const text = (value, name, max) => {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max || /[\u0000-\u001F]/.test(value)) throw new Error(`Check ${name}; it is required and must be at most ${max} characters, on one line.`);
   return value.trim();
@@ -18,22 +20,39 @@ export function validateRequest(input) {
     consent: { purpose: 'reply-to-evaluation-request', accepted: true },
     source: ['direct', 'referral', 'field-notes', 'list-check', 'search', 'other'].includes(input.source) ? input.source : 'direct' };
 }
+function safeIntakeURL(value) {
+  const url = new URL(value);
+  if (url.protocol !== 'https:' || url.username || url.password || url.hash || url.search) throw new Error('Intake destinations require plain HTTPS URLs without credentials, fragments, or query strings.');
+  return url.href;
+}
 export function validateIntake(config, now = Date.now()) {
   if (!config || config.status !== 'accepted') return null;
-  const required = ['url', 'receipt', 'privacyURL', 'acceptedUntil'];
+  const required = ['url', 'receipt', 'privacyURL', 'reconcileURL', 'acceptedUntil'];
   if (required.some(key => typeof config[key] !== 'string' || !config[key])) throw new Error('Incomplete accepted intake configuration.');
-  for (const key of ['url', 'receipt', 'privacyURL']) {
-    const url = new URL(config[key]);
-    if (url.protocol !== 'https:' || url.username || url.password || url.hash || url.search) throw new Error('Intake destinations require plain HTTPS URLs without credentials, fragments, or query strings.');
-  }
+  for (const key of ['url', 'receipt', 'privacyURL', 'reconcileURL']) safeIntakeURL(config[key]);
   const expiry = Date.parse(config.acceptedUntil);
   if (!Number.isFinite(expiry) || expiry <= now) return null;
   return config;
 }
+export function makePendingReference(requestId, config, now = Date.now()) {
+  const accepted = validateIntake(config, now);
+  if (!accepted) throw new Error('Accepted intake configuration is required before preserving a request reference.');
+  if (typeof requestId !== 'string' || !REQUEST_ID.test(requestId)) throw new Error('A persistent request identifier is required.');
+  // Deliberately contains no broker/company/email/market/goal data.
+  return { schema: PENDING_SCHEMA, requestId, reconcileURL: accepted.reconcileURL };
+}
+export function validatePendingReference(value, config, now = Date.now()) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const allowed = new Set(['schema', 'requestId', 'reconcileURL']);
+  if (Object.keys(value).some(key => !allowed.has(key)) || value.schema !== PENDING_SCHEMA || typeof value.requestId !== 'string' || !REQUEST_ID.test(value.requestId)) return null;
+  const accepted = validateIntake(config, now);
+  if (!accepted || value.reconcileURL !== accepted.reconcileURL) return null;
+  return { schema: PENDING_SCHEMA, requestId: value.requestId, reconcileURL: accepted.reconcileURL };
+}
 export async function submitRequest(request, config, { fetcher = globalThis.fetch, now = Date.now(), requestId } = {}) {
   const accepted = validateIntake(config, now);
   if (!accepted) return { state: 'not-sent', reason: 'intake-unavailable' };
-  if (typeof requestId !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(requestId)) throw new Error('A persistent request identifier is required.');
+  if (typeof requestId !== 'string' || !REQUEST_ID.test(requestId)) throw new Error('A persistent request identifier is required.');
   // Browser caller supplies the same identifier after an ambiguous response; never auto-retry.
   const payload = validateRequest(request);
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 10000);

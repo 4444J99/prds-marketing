@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateRequest, validateIntake, submitRequest } from '../public/inquiry.mjs';
+import { makePendingReference, validatePendingReference, validateRequest, validateIntake, submitRequest } from '../public/inquiry.mjs';
 const input = () => ({ company: 'Example Broker', name: 'Example Person', email: 'person@example.test', offer: 'existing-list', market: 'CO', goal: 'Remove duplicates', consent: true, source: 'referral' });
 const now = Date.parse('2026-09-24T20:00:00Z');
-const config = () => ({ status: 'accepted', url: 'https://example.test/intake', receipt: 'https://example.test/evidence', privacyURL: 'https://example.test/privacy', acceptedUntil: '2026-10-01T00:00:00Z' });
+const config = () => ({ status: 'accepted', url: 'https://example.test/intake', receipt: 'https://example.test/evidence', privacyURL: 'https://example.test/privacy', reconcileURL: 'https://example.test/reconcile', acceptedUntil: '2026-10-01T00:00:00Z' });
 const id = 'test-request-123456789';
 test('request normalized to bounded allowed fields and purpose-specific consent', () => {
   const r = validateRequest(input()); assert.equal(r.schema, 'prds.broker-fit-request.v1'); assert.equal(r.consent.purpose, 'reply-to-evaluation-request'); assert.equal(r.source, 'referral');
@@ -18,8 +18,27 @@ test('unconfigured intake never invokes network', async () => {
   assert.equal(r.state, 'not-sent'); assert.equal(calls, 0);
 });
 test('expired acceptance fails closed', () => assert.equal(validateIntake({ ...config(), acceptedUntil: '2026-09-01' }, now), null));
-for (const url of ['http://example.test/intake', 'https://user:pass@example.test/intake', 'https://example.test/intake?key=x', 'https://example.test/intake#x']) test(`rejects unsafe intake URL ${url}`, () => assert.throws(() => validateIntake({ ...config(), url }, now)));
-test('missing configuration evidence rejected', () => assert.throws(() => validateIntake({ status: 'accepted' }, now)));
+for (const key of ['url', 'receipt', 'privacyURL', 'reconcileURL']) {
+  for (const value of ['http://example.test/intake', 'https://user:pass@example.test/intake', 'https://example.test/intake?key=x', 'https://example.test/intake#x']) {
+    test(`rejects unsafe ${key} ${value}`, () => assert.throws(() => validateIntake({ ...config(), [key]: value }, now)));
+  }
+}
+test('missing configuration evidence or reconciliation route rejected', () => {
+  assert.throws(() => validateIntake({ status: 'accepted' }, now));
+  const { reconcileURL, ...missing } = config(); assert.throws(() => validateIntake(missing, now));
+});
+test('pending reference contains only opaque reconciliation data', () => {
+  const pending = makePendingReference(id, config(), now);
+  assert.deepEqual(Object.keys(pending).sort(), ['reconcileURL', 'requestId', 'schema']);
+  assert.equal(JSON.stringify(pending).includes('Example Broker'), false);
+  assert.deepEqual(validatePendingReference(pending, config(), now), pending);
+});
+test('pending reference fails closed on injected fields, wrong route, or invalid id', () => {
+  const pending = makePendingReference(id, config(), now);
+  assert.equal(validatePendingReference({ ...pending, email: 'person@example.test' }, config(), now), null);
+  assert.equal(validatePendingReference({ ...pending, reconcileURL: 'https://other.test/reconcile' }, config(), now), null);
+  assert.equal(validatePendingReference({ ...pending, requestId: 'short' }, config(), now), null);
+});
 test('idempotency identity is mandatory', async () => assert.rejects(submitRequest(input(), config(), { now, fetcher: () => { throw Error('must not reach'); } }), /identifier/));
 test('success requires a correlated durable receipt', async () => {
   const result = await submitRequest(input(), config(), { now, requestId: id, fetcher: async (url, options) => {

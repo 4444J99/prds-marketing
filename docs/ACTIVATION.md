@@ -20,10 +20,13 @@ The existing API must validate the `prds.broker-fit-request.v1` contract impleme
 - Response: `{ "schema": "prds.intake-receipt.v1", "state": "received", "requestId": "<same id>", "receiptId": "<opaque durable id>" }`.
 - A receipt is an inquiry only, never a purchase, entitlement, scheduled delivery, or marketing subscription.
 - Reconcile ambiguous 5xx/timeouts without resubmitting under a fresh key. The frontend blocks further sends after an uncertain result; no auto-retry.
+- Activation requires a plain-HTTPS `reconcileURL` in addition to the intake, receipt and privacy URLs. It must let a requester reconcile an opaque request reference without putting broker PII or credentials in the URL.
+- Before POST, the client stores only `prds.pending-inquiry.v1` = schema + random request ID + accepted reconciliation URL in same-tab `sessionStorage`. It stores no company, person, email, market or goal. A reload in that tab therefore blocks a second submission and exposes the same reference/reconciliation route; a confirmed receipt or deterministic rejection clears the reference, while an uncertain result retains it.
+- If the browser cannot preserve that opaque reference, the client fails closed before network activity. Closing the tab may still discard `sessionStorage`; the receiving service remains authoritative for durable reconciliation.
 - Show an actual privacy/controller/correction contact and retention notice. Test private record access, correction/deletion, operator notification, suppression, and authorization. Redact inquiry PII in public logs/artifacts.
 - Verify a synthetic exact-head end-to-end request in the intended environment, then separately verify an explicitly authorized real inquiry. Test evidence is never a prospect.
 
-To activate, replace `intake` with accepted `url`, sanitized `receipt`, `privacyURL`, `acceptedUntil`; all URLs are HTTPS without query credentials. Update the request-page privacy link/text to display the actual receiving notice. Update only `/request/*` CSP `connect-src` to the exact receiving origin after review; the list checker must retain `connect-src 'none'`. Keep form-action denied because transport is explicit JS, not browser fallback. Current global CSP intentionally blocks all sends until this is completed.
+To activate, replace `intake` with accepted `url`, sanitized `receipt`, `privacyURL`, `reconcileURL`, and `acceptedUntil`; all URLs are HTTPS without query credentials. Update the request-page privacy link/text to display the actual receiving notice. Update only `/request/*` CSP `connect-src` to the exact receiving origin after review; the list checker must retain `connect-src 'none'`. Keep form-action denied because transport is explicit JS, not browser fallback. Current global CSP intentionally blocks all sends until this is completed.
 
 ## Deployment owner: existing ops / Cloudflare authority
 
@@ -44,7 +47,7 @@ Use the existing permitted Pages account/project and record project identity, de
 
 1. Independent review and successful exact-head unit/contract/build/browser jobs.
 2. Actual domain/project confirmed; copy approved by owner. Keep source development distinct from accepted coverage.
-3. Intake receipt, privacy notice, error behavior and receiving operator verified.
+3. Intake receipt, privacy notice, error behavior, request-reference reconciliation and receiving operator verified.
 4. Scope/offer/payment/cancellation/entitlement parity and real seven-run delivery gate remain owned by commerce/ops.
 5. Only after a publication receipt: generate canonicals and sitemap using the actual origin; remove noindex consistently from meta, robots and HTTP headers. Preserve noindex on previews.
 6. Real inquiries, samples reviewed, pilots paid and renewals are measured independently. No fictional metrics.
