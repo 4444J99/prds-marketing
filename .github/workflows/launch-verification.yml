@@ -13,12 +13,13 @@ jobs:
     timeout-minutes: 20
     defaults:
       run:
+        shell: bash
         working-directory: apps/site
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 verified in run 36085883800
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24.19.0'
       - name: Install public build dependencies
@@ -36,7 +37,7 @@ jobs:
         run: python scripts/browser-check.py
       - name: Save exact-head verification artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: prds-launch-${{ github.event.pull_request.head.sha || github.sha }}
           if-no-files-found: error
@@ -46,3 +47,67 @@ jobs:
             apps/site/dist
             apps/site/unit-tests.txt
             apps/site/browser-evidence
+  preserve_verified_lock:
+    name: Preserve verified dependency lock (temporary)
+    needs: verify
+    if: github.event_name == 'pull_request' && github.event.pull_request.number == 3 && github.event.pull_request.head.repo.full_name == '4444J99/prds-marketing' && github.event.pull_request.head.ref == 'feat/broker-acquisition-launch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      # No checkout and no repository code execution. This only creates an
+      # immutable Git blob from an exact, digest-verified prior CI artifact.
+      # It never creates commits or moves refs and will be removed once imported.
+      - name: Preserve exact generated lock bytes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import os, json, hashlib, base64, io, zipfile
+          from urllib.request import Request, build_opener, HTTPRedirectHandler
+          from urllib.error import HTTPError
+          from urllib.parse import urlparse
+          class NoRedirect(HTTPRedirectHandler):
+              def redirect_request(self, req, fp, code, msg, headers, newurl):
+                  return None
+          client = build_opener(NoRedirect)
+          base = 'https://api.github.com/repos/4444J99/prds-marketing'
+          headers = {'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'}
+          try:
+              client.open(Request(base + '/actions/artifacts/10844255069/zip', headers=headers), timeout=30)
+              raise RuntimeError('Expected a signed artifact redirect')
+          except HTTPError as error:
+              if error.code != 302:
+                  raise
+              destination = error.headers['Location']
+          parsed = urlparse(destination)
+          if parsed.scheme != 'https' or not (parsed.hostname or '').endswith('.blob.core.windows.net') or parsed.username or parsed.password:
+              raise RuntimeError('Unexpected artifact storage destination')
+          # Deliberately omit GitHub authorization on the storage request.
+          with client.open(Request(destination), timeout=30) as response:
+              archive = response.read(2 * 1024 * 1024 + 1)
+          if hashlib.sha256(archive).hexdigest() != '877a1763089001bf75f9fe14a1296f2da9ed72ba0ceded66df3f230c341b99c5':
+              raise RuntimeError('Artifact digest mismatch')
+          with zipfile.ZipFile(io.BytesIO(archive)) as z:
+              info = z.getinfo('package-lock.json')
+              if info.file_size != 144789:
+                  raise RuntimeError('Unexpected lock size')
+              lock = z.read(info)
+          if hashlib.sha256(lock).hexdigest() != 'c1a51daa56875a52228858f4053dba9b052bec94b109a30b5dba7633bb7ef8bb':
+              raise RuntimeError('Lock digest mismatch')
+          parsed_lock = json.loads(lock)
+          if parsed_lock['name'] != 'prds-marketing' or parsed_lock['packages']['']['dependencies'] != {'astro': '7.3.3'}:
+              raise RuntimeError('Unexpected package identity')
+          blob_sha = hashlib.sha1(b'blob ' + str(len(lock)).encode() + b'\0' + lock).hexdigest()
+          payload = json.dumps({'encoding':'base64', 'content':base64.b64encode(lock).decode()}).encode()
+          request = Request(base + '/git/blobs', data=payload, headers={**headers, 'Content-Type':'application/json'}, method='POST')
+          with client.open(request, timeout=30) as response:
+              result = json.load(response)
+          if result.get('sha') != blob_sha:
+              raise RuntimeError('Git blob identity mismatch')
+          print('VERIFIED_LOCK_BLOB=' + blob_sha)
+          print('No commit, branch update, deployment, or customer operation performed.')
+          PY

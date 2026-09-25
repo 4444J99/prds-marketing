@@ -1,7 +1,7 @@
 import json, threading
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 ROOT=Path('dist').resolve()
 OUT=Path('browser-evidence').resolve(); OUT.mkdir(exist_ok=True)
 class Handler(SimpleHTTPRequestHandler):
@@ -37,7 +37,7 @@ with sync_playwright() as p:
     page.goto(base+'/list-check/',wait_until='networkidle'); requests.clear()
     csv='name,date,phone\nAlpha,2026-09-24,123\n Alpha ,2026-09-24,123\nBeta,invalid,\n"<img src=x onerror=alert(1)>",2026-02-30,\n'
     page.locator('#csv-file').set_input_files({'name':'sample.csv','mimeType':'text/csv','buffer':csv.encode()})
-    page.wait_for_function("!document.getElementById('analyze').disabled")
+    expect(page.locator('#analyze')).to_be_enabled()
     page.select_option('#date-column','date'); page.click('#analyze')
     check('browser diagnostic reports repeated full row','1 repeated full rows' in page.locator('#diagnostic-result').inner_text())
     check('browser diagnostic reports invalid dates','invalid or not YYYY-MM-DD: 2' in page.locator('#diagnostic-result').inner_text())
@@ -47,7 +47,7 @@ with sync_playwright() as p:
     page.screenshot(path=str(OUT/'diagnostic-verified.png'),full_page=True)
     page.click('#clear'); check('clear removes results/file and disables run',page.locator('#diagnostic-result').inner_text()=='' and page.locator('#csv-file').input_value()=='' and page.locator('#analyze').is_disabled())
     page.locator('#csv-file').set_input_files({'name':'malformed.csv','mimeType':'text/csv','buffer':b'name\n"open'})
-    page.wait_for_function("document.getElementById('diagnostic-status').textContent.includes('not closed')")
+    expect(page.locator('#diagnostic-status')).to_contain_text('not closed')
     check('malformed browser CSV prevents analysis',page.locator('#analyze').is_disabled())
     page.goto(base+'/request/',wait_until='networkidle'); requests.clear()
     for key,value in {'company':'Example Broker','name':'Test Buyer','email':'buyer@example.test','market':'CO','goal':'Review relevant rows'}.items(): page.fill('#'+key,value)
